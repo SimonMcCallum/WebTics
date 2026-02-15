@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebTics Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f7f7f7;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .controls input, .controls select, .controls button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .controls input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .controls button:hover {
+            background: #5568d3;
+        }
+
+        .controls button:active {
+            transform: scale(0.98);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f7f7f7;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        #status {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        #status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        #status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        #status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+        }
+
+        th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9ff;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .event-type {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .event-type-0 { background: #ffebee; color: #c62828; } /* Death */
+        .event-type-1 { background: #e8f5e9; color: #2e7d32; } /* Respawn */
+        .event-type-100 { background: #e3f2fd; color: #1565c0; } /* Task Start */
+        .event-type-101 { background: #e8f5e9; color: #2e7d32; } /* Task Complete */
+        .event-type-102 { background: #e8f5e9; color: #2e7d32; } /* Correct */
+        .event-type-103 { background: #ffebee; color: #c62828; } /* Incorrect */
+        .event-type-104 { background: #fff3e0; color: #e65100; } /* Timeout */
+        .event-type-200 { background: #f3e5f5; color: #6a1b9a; } /* Attention */
+
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .json-data {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            opacity: 0.3;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls input, .controls button {
+                width: 100%;
+            }
+
+            table {
+                font-size: 0.85em;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 WebTics Dashboard</h1>
+            <p>Real-time game telemetry and metrics</p>
+        </header>
+
+        <div class="controls">
+            <label for="apiUrl">Backend URL:</label>
+            <input type="text" id="apiUrl" value="http://localhost:8000" placeholder="http://localhost:8000">
+
+            <label for="sessionId">Session ID:</label>
+            <input type="number" id="sessionId" value="1" placeholder="Session ID" min="1">
+
+            <label for="limit">Limit:</label>
+            <select id="limit">
+                <option value="50">50</option>
+                <option value="100" selected>100</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+                <option value="1000">1000</option>
+            </select>
+
+            <button id="refreshBtn">🔄 Refresh</button>
+            <button id="autoRefreshBtn">⏱️ Auto-Refresh (OFF)</button>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <h3 id="totalEvents">-</h3>
+                <p>Total Events</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="eventTypes">-</h3>
+                <p>Event Types</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="avgMagnitude">-</h3>
+                <p>Avg Magnitude</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="timeRange">-</h3>
+                <p>Time Range</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="status" class="loading">Initializing...</div>
+
+            <table id="eventsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Subtype</th>
+                        <th>Position</th>
+                        <th>Magnitude</th>
+                        <th>Data</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsBody">
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                                </svg>
+                                <p>No events yet. Start logging from your game!</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const EVENT_TYPE_NAMES = {
+            0: 'PLAYER_DEATH',
+            1: 'PLAYER_RESPAWN',
+            2: 'PLAYER_SHOOT',
+            3: 'PLAYER_HIT',
+            10: 'WAYPOINT_REACHED',
+            11: 'LEVEL_COMPLETE',
+            12: 'LEVEL_FAILED',
+            20: 'BUTTON_CLICK',
+            21: 'MENU_OPEN',
+            22: 'MENU_CLOSE',
+            100: 'TASK_START',
+            101: 'TASK_COMPLETE',
+            102: 'CORRECT_RESPONSE',
+            103: 'INCORRECT_RESPONSE',
+            104: 'TIMEOUT',
+            200: 'ATTENTION_TASK',
+            201: 'IMPULSIVE_RESPONSE',
+            202: 'SUSTAINED_ATTENTION',
+            203: 'SELECTIVE_ATTENTION',
+        };
+
+        let autoRefreshInterval = null;
+
+        function showStatus(message, type = 'loading') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+        function formatPosition(x, y, z) {
+            if (x === null && y === null && z === null) return '-';
+            return `(${x || 0}, ${y || 0}, ${z || 0})`;
+        }
+
+        function updateStats(events) {
+            const total = events.length;
+            const types = new Set(events.map(e => e.event_type)).size;
+
+            const magnitudes = events.map(e => e.magnitude).filter(m => m !== null && m > 0);
+            const avgMag = magnitudes.length > 0
+                ? (magnitudes.reduce((a, b) => a + b, 0) / magnitudes.length).toFixed(2)
+                : '0.00';
+
+            const timestamps = events.map(e => new Date(e.timestamp).getTime());
+            const timeRange = timestamps.length > 0
+                ? ((Math.max(...timestamps) - Math.min(...timestamps)) / 1000 / 60).toFixed(1) + ' min'
+                : '-';
+
+            document.getElementById('totalEvents').textContent = total;
+            document.getElementById('eventTypes').textContent = types;
+            document.getElementById('avgMagnitude').textContent = avgMag;
+            document.getElementById('timeRange').textContent = timeRange;
+        }
+
+        async function loadEvents() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const sessionId = document.getElementById('sessionId').value;
+            const limit = document.getElementById('limit').value;
+
+            showStatus('Loading events...', 'loading');
+
+            try {
+                const response = await fetch(`${apiUrl}/api/v1/sessions/${sessionId}/events?limit=${limit}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const events = await response.json();
+
+                if (events.length === 0) {
+                    document.getElementById('eventsBody').innerHTML = `
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <p>No events found for session ${sessionId}</p>
+                            </td>
+                        </tr>
+                    `;
+                    showStatus(`No events found for session ${sessionId}`, 'error');
+                    updateStats([]);
+                    return;
+                }
+
+                // Update table
+                const tbody = document.getElementById('eventsBody');
+                tbody.innerHTML = events.map(event => `
+                    <tr>
+                        <td>${event.id}</td>
+                        <td>
+                            <span class="event-type event-type-${event.event_type}">
+                                ${EVENT_TYPE_NAMES[event.event_type] || 'TYPE_' + event.event_type}
+                            </span>
+                        </td>
+                        <td>${event.event_subtype}</td>
+                        <td>${formatPosition(event.x, event.y, event.z)}</td>
+                        <td>${event.magnitude !== null ? event.magnitude.toFixed(3) : '-'}</td>
+                        <td><span class="json-data">${event.data ? JSON.stringify(event.data) : '-'}</span></td>
+                        <td class="timestamp">${formatTimestamp(event.timestamp)}</td>
+                    </tr>
+                `).join('');
+
+                updateStats(events);
+                showStatus(`Loaded ${events.length} events from session ${sessionId}`, 'success');
+
+            } catch (error) {
+                console.error('Error loading events:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+                document.getElementById('eventsBody').innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <p>Error loading events: ${error.message}</p>
+                            <p>Make sure the backend is running at ${apiUrl}</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function toggleAutoRefresh() {
+            const btn = document.getElementById('autoRefreshBtn');
+
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                btn.textContent = '⏱️ Auto-Refresh (OFF)';
+            } else {
+                autoRefreshInterval = setInterval(loadEvents, 3000);
+                btn.textContent = '⏱️ Auto-Refresh (ON)';
+                loadEvents();
+            }
+        }
+
+        // Event listeners
+        document.getElementById('refreshBtn').addEventListener('click', loadEvents);
+        document.getElementById('autoRefreshBtn').addEventListener('click', toggleAutoRefresh);
+
+        // Load on Enter key in inputs
+        document.getElementById('apiUrl').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadEvents();
+        });
+        document.getElementById('sessionId').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadEvents();
+        });
+
+        // Initial load
+        loadEvents();
+    </script>
+</body>
+</html>
