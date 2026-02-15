@@ -8,7 +8,7 @@ If you're using Nginx Proxy Manager:
 2. Set **Domain Names**: `webtics.yourdomain.com`
 3. Set **Scheme**: `http`
 4. Set **Forward Hostname/IP**: `webtics_backend` (or `localhost` if on same machine)
-5. Set **Forward Port**: `8000`
+5. Set **Forward Port**: `8013`
 6. Enable **Websockets Support**: No
 7. Enable **Block Common Exploits**: Yes
 8. Enable **SSL** with Let's Encrypt (for production)

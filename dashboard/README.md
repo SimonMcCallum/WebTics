@@ -65,7 +65,7 @@ Then access at `http://localhost:8080`
 
 The dashboard has these controls:
 
-1. **Backend URL**: WebTics backend API URL (default: `http://localhost:8000`)
+1. **Backend URL**: WebTics backend API URL (default: `http://localhost:8013`)
 2. **Session ID**: Which metric session to view events from
 3. **Limit**: Maximum number of events to retrieve (50-1000)
 4. **Refresh**: Manual refresh button
@@ -199,7 +199,7 @@ from fastapi.staticfiles import StaticFiles
 app.mount("/dashboard", StaticFiles(directory="dashboard", html=True), name="dashboard")
 ```
 
-Access at: `http://localhost:8000/dashboard`
+Access at: `http://localhost:8013/dashboard`
 
 ## Advanced Features (Future)
 
@@ -217,7 +217,7 @@ Potential enhancements:
 
 ### Events not loading
 
-1. Check backend is running: `curl http://localhost:8000/`
+1. Check backend is running: `curl http://localhost:8013/`
 2. Verify session ID exists in database
 3. Check browser console for errors
 4. Ensure CORS is configured correctly

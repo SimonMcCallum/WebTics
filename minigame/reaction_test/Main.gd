@@ -23,7 +23,7 @@ var build_version: String = "0.1.0"
 
 func _ready():
 	# Configure WebTics
-	WebTics.configure("http://localhost:8000")
+	WebTics.configure("http://localhost:8013")
 
 	# Connect signals
 	WebTics.session_created.connect(_on_session_created)

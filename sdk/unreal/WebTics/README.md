@@ -40,7 +40,7 @@ void AMyGameMode::BeginPlay()
     UWebTicsSubsystem* WebTics = GetGameInstance()->GetSubsystem<UWebTicsSubsystem>();
 
     // Configure backend URL
-    WebTics->Configure("http://localhost:8000");
+    WebTics->Configure("http://localhost:8013");
 
     // Open metric session
     WebTics->OpenMetricSession("player_123", "1.0.0");
@@ -202,7 +202,7 @@ The plugin works on mobile platforms with no code changes. Add these permissions
 
 ### Events not appearing in backend
 
-1. Check backend is running: `curl http://localhost:8000/`
+1. Check backend is running: `curl http://localhost:8013/`
 2. Verify `Configure()` called with correct URL
 3. Ensure session and play session created before logging
 4. Check Output Log for WebTics errors

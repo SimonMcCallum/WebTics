@@ -5,7 +5,7 @@ extends Node
 ## Provides async event logging with automatic session management.
 ##
 ## Usage:
-##   WebTics.configure("http://localhost:8000")
+##   WebTics.configure("http://localhost:8013")
 ##   WebTics.open_metric_session("player_123", "1.0.0")
 ##   WebTics.start_play_session()
 ##   WebTics.log_event(EventTypes.Type.PLAYER_DEATH, EventTypes.DeathSubtype.FALLING)
@@ -19,7 +19,7 @@ signal event_logged(success: bool)
 signal error_occurred(error_message: String)
 
 ## Configuration
-var base_url: String = "http://localhost:8000"
+var base_url: String = "http://localhost:8013"
 var api_version: String = "v1"
 
 ## Session state

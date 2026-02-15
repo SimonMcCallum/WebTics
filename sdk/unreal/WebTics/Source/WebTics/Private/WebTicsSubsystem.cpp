@@ -11,7 +11,7 @@ void UWebTicsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 
 	// Default configuration
-	BaseURL = TEXT("http://localhost:8000");
+	BaseURL = TEXT("http://localhost:8013");
 	APIVersion = TEXT("v1");
 	MetricSessionId = -1;
 	PlaySessionId = -1;

@@ -229,16 +229,16 @@ bool IsWiFiConnected()
 
 #### Local Backend Access
 
-Mobile devices can't access `localhost:8000`. Options:
+Mobile devices can't access `localhost:8013`. Options:
 
 1. **Use Device IP**: Configure backend URL to your computer's local IP
    ```gdscript
-   WebTics.configure("http://192.168.1.100:8000")
+   WebTics.configure("http://192.168.1.100:8013")
    ```
 
 2. **Use ngrok**: Tunnel localhost to public URL
    ```bash
-   ngrok http 8000
+   ngrok http 8013
    # Use the ngrok URL in your app: https://abc123.ngrok.io
    ```
 
@@ -247,12 +247,12 @@ Mobile devices can't access `localhost:8000`. Options:
 #### Android Emulator
 
 - Host machine is accessible at `10.0.2.2`
-- Configure: `WebTics.configure("http://10.0.2.2:8000")`
+- Configure: `WebTics.configure("http://10.0.2.2:8013")`
 
 #### iOS Simulator
 
 - Host machine is accessible at `localhost` (shares network with host)
-- Configure: `WebTics.configure("http://localhost:8000")`
+- Configure: `WebTics.configure("http://localhost:8013")`
 
 ## Production Deployment Checklist
 

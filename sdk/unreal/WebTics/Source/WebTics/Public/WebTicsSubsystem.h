@@ -15,7 +15,7 @@
  *
  * Usage:
  *   UWebTicsSubsystem* WebTics = GetGameInstance()->GetSubsystem<UWebTicsSubsystem>();
- *   WebTics->Configure("http://localhost:8000");
+ *   WebTics->Configure("http://localhost:8013");
  *   WebTics->OpenMetricSession("player_123", "1.0.0");
  *   WebTics->StartPlaySession();
  *   WebTics->LogEvent(EWebTicsEventType::PLAYER_DEATH, 0);
@@ -34,7 +34,7 @@ public:
 
 	/**
 	 * Configure the WebTics backend URL
-	 * @param URL - Base URL of the WebTics backend (e.g., "http://localhost:8000")
+	 * @param URL - Base URL of the WebTics backend (e.g., "http://localhost:8013")
 	 */
 	UFUNCTION(BlueprintCallable, Category = "WebTics")
 	void Configure(const FString& URL);

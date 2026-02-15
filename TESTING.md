@@ -23,26 +23,26 @@ docker-compose logs -f backend
 docker-compose ps
 ```
 
-The backend will be available at `http://localhost:8000`
+The backend will be available at `http://localhost:8013`
 
 ### 2. Test the API
 
 ```bash
 # Health check
-curl http://localhost:8000/
+curl http://localhost:8013/
 
 # Create a test session
-curl -X POST http://localhost:8000/api/v1/sessions \
+curl -X POST http://localhost:8013/api/v1/sessions \
   -H "Content-Type: application/json" \
   -d '{"unique_id": "test_player_1", "build_number": "0.1.0"}'
 
 # Response will include session_id, use it for play session
-curl -X POST http://localhost:8000/api/v1/play-sessions \
+curl -X POST http://localhost:8013/api/v1/play-sessions \
   -H "Content-Type: application/json" \
   -d '{"metric_session_id": 1}'
 
 # Log a test event (use play_session_id from above)
-curl -X POST "http://localhost:8000/api/v1/events?play_session_id=1" \
+curl -X POST "http://localhost:8013/api/v1/events?play_session_id=1" \
   -H "Content-Type: application/json" \
   -d '{
     "event_type": 100,
@@ -54,7 +54,7 @@ curl -X POST "http://localhost:8000/api/v1/events?play_session_id=1" \
   }'
 
 # Retrieve events for session
-curl http://localhost:8000/api/v1/sessions/1/events
+curl http://localhost:8013/api/v1/sessions/1/events
 ```
 
 ### 3. Test with the Godot Minigame
@@ -100,10 +100,10 @@ SELECT event_type, COUNT(*) FROM events GROUP BY event_type;
 
 ```bash
 # Get all events for a session
-curl http://localhost:8000/api/v1/sessions/1/events
+curl http://localhost:8013/api/v1/sessions/1/events
 
 # Pretty print with jq
-curl http://localhost:8000/api/v1/sessions/1/events | jq '.'
+curl http://localhost:8013/api/v1/sessions/1/events | jq '.'
 ```
 
 ### Database Query
@@ -276,7 +276,7 @@ docker-compose up -d --force-recreate
 ### Godot can't connect
 
 1. Check backend URL in game code
-2. Verify backend is accessible: `curl http://localhost:8000/`
+2. Verify backend is accessible: `curl http://localhost:8013/`
 3. Check Godot console for error messages
 4. Verify CORS headers are set
 5. Test with browser dev tools network tab
@@ -318,5 +318,5 @@ docker-compose exec db psql -U webtics -d webtics -c "CREATE INDEX idx_events_ti
 
 For issues or questions:
 - Check documentation in `docs/`
-- Review API documentation: `http://localhost:8000/docs`
+- Review API documentation: `http://localhost:8013/docs`
 - Open an issue on GitHub

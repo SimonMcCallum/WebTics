@@ -15,7 +15,7 @@ extends Node
 
 func _ready():
 	# Configure backend URL
-	WebTics.configure("http://localhost:8000")
+	WebTics.configure("http://localhost:8013")
 
 	# Open metric session (unique player ID and build version)
 	WebTics.open_metric_session("player_123", "1.0.0")

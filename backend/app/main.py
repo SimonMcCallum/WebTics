@@ -5,17 +5,22 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
 
-from . import models, schemas
+from . import models, schemas, models_research
 from .database import engine, get_db
+from .routers import research
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
+models_research.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="WebTics Telemetry API",
-    description="Lightweight game telemetry and metrics system",
+    description="Lightweight game telemetry and metrics system with research ethics compliance",
     version="0.1.0"
 )
+
+# Include research ethics router
+app.include_router(research.router)
 
 # CORS middleware for Godot web exports
 app.add_middleware(

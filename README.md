@@ -28,7 +28,7 @@ cd WebTics
 docker-compose up -d
 
 # Verify it's running
-curl http://localhost:8000/
+curl http://localhost:8013/
 ```
 
 ### 2. Integrate with Your Game
@@ -41,7 +41,7 @@ cp -r sdk/godot/addons/webtics addons/
 
 # In your game code
 func _ready():
-    WebTics.configure("http://localhost:8000")
+    WebTics.configure("http://localhost:8013")
     WebTics.open_metric_session("player_123", "1.0.0")
     await WebTics.session_created
 
@@ -63,7 +63,7 @@ func _ready():
 UWebTicsSubsystem* WebTics = GetGameInstance()->GetSubsystem<UWebTicsSubsystem>();
 
 // Configure and start session
-WebTics->Configure("http://localhost:8000");
+WebTics->Configure("http://localhost:8013");
 WebTics->OpenMetricSession("player_123", "1.0.0");
 
 // Log events
@@ -158,7 +158,7 @@ View the data:
 
 ```bash
 # Query events via API
-curl http://localhost:8000/api/v1/sessions/1/events | jq '.'
+curl http://localhost:8013/api/v1/sessions/1/events | jq '.'
 
 # Or query database directly
 docker-compose exec db psql -U webtics -d webtics
