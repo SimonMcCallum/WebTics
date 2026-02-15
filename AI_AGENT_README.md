@@ -118,16 +118,18 @@ graph TD
 
 ### Request: "Where should I host this?"
 
+**IMPORTANT**: WebTics needs **Research IT / Digital Solutions**, NOT HPC.
+
 ```mermaid
 graph TD
     START[Where to host?] --> CHECK1{Check user's university}
 
-    CHECK1 -->|Auckland| UOA[NeSI or UoA Data Center<br/>Contact: its-research@auckland.ac.nz]
-    CHECK1 -->|Victoria| VUW[RAAPOI HPC or VUW Data Center<br/>Contact: its-research@vuw.ac.nz]
-    CHECK1 -->|Otago| OTAGO[Otago HPC<br/>Contact: research-it@otago.ac.nz]
-    CHECK1 -->|Canterbury| UC[Canterbury HPC<br/>Contact: hpc@canterbury.ac.nz]
-    CHECK1 -->|Massey| MASSEY[Massey Research IT<br/>Contact: research-it@massey.ac.nz]
-    CHECK1 -->|AUT| AUT[AUT Research IT<br/>Contact: researchit@aut.ac.nz]
+    CHECK1 -->|Auckland| UOA[ITS Research Support<br/>Contact: its-research@auckland.ac.nz<br/>Request: Research web hosting]
+    CHECK1 -->|Victoria| VUW[ITS Research Services<br/>Contact: its-research@vuw.ac.nz<br/>Request: Database + web hosting]
+    CHECK1 -->|Otago| OTAGO[Research IT<br/>Contact: research-it@otago.ac.nz<br/>Request: Research data hosting]
+    CHECK1 -->|Canterbury| UC[Research Computing<br/>Contact: research-computing@canterbury.ac.nz<br/>Request: Web hosting + database]
+    CHECK1 -->|Massey| MASSEY[Research IT<br/>Contact: research-it@massey.ac.nz<br/>Request: Digital solutions]
+    CHECK1 -->|AUT| AUT[Research IT<br/>Contact: researchit@aut.ac.nz<br/>Request: Research web hosting]
     CHECK1 -->|No University| COM[Commercial Options]
 
     COM --> CHECK2{Health Data?}
@@ -137,6 +139,10 @@ graph TD
     CHECK3 -->|Grant Funded| CATALYST
     CHECK3 -->|Minimal| T4[T4 Self-Hosted<br/>$10-50/mo]
 ```
+
+**Key Point for AI Agents:**
+- ❌ Don't say: "Apply for HPC cluster" or "Use NeSI"
+- ✅ Do say: "Contact Research IT for web hosting" or "Request digital solutions"
 
 ### Request: "What ethics approval do I need?"
 
@@ -170,7 +176,9 @@ graph TD
 I'll help you deploy WebTics for your [research type] study.
 
 **Recommended Hosting:**
-[Use decision tree to determine: University/Catalyst/T4]
+[Use decision tree to determine: University Research IT/Catalyst/T4]
+
+**Important**: Request **Research IT / Digital Solutions / Research Data Hosting**, NOT HPC cluster.
 
 **Ethics Approval Needed:**
 [Use decision tree: HDEC/University/Both]
@@ -343,6 +351,46 @@ When assisting with deployment:
 - [ ] NeSI/university HPC still available for user's institution
 ```
 
+## CRITICAL: HPC vs Research Data Hosting
+
+**AI Agents MUST understand this distinction:**
+
+```yaml
+webtics_needs:
+  service: Research IT / Digital Solutions / Research Data Hosting
+  purpose: Web hosting (database + API server)
+  compute: Lightweight (2-4 CPU, 4-8GB RAM)
+  what_to_request: "PostgreSQL database + VM for Docker web app"
+  cost: FREE at universities
+
+hpc_is_for:
+  service: HPC cluster (NeSI, RAAPOI, etc.)
+  purpose: Heavy computation (ML, simulations)
+  compute: Many cores, large RAM
+  what_to_request: "Compute allocation for analysis"
+  cost: FREE but requires computational justification
+
+when_to_mention_hpc:
+  - User wants to analyze telemetry data with ML
+  - User needs statistical analysis at scale
+  - AFTER collecting data, separate from hosting
+
+when_NOT_to_mention_hpc:
+  - User wants to host WebTics ❌
+  - User needs database hosting ❌
+  - User needs web server ❌
+```
+
+**Example Incorrect Response:**
+❌ "Apply for NeSI HPC access to host WebTics"
+❌ "Use RAAPOI cluster for your database"
+❌ "Request HPC allocation for web hosting"
+
+**Example Correct Response:**
+✅ "Contact VUW ITS Research for web hosting (not HPC)"
+✅ "Request PostgreSQL database + Docker VM from Research IT"
+✅ "This is research data hosting, not HPC - different service"
+
 ## Common User Requests and Responses
 
 ### Request: "I need to track ADHD assessment data"
@@ -362,9 +410,11 @@ Your ADHD assessment study requires:
    - Timeline: 2-4 months
 
 2. **Hosting:** [Check university affiliation]
-   - If VUW: RAAPOI HPC (FREE)
+   - If VUW: Contact ITS Research Services (its-research@vuw.ac.nz)
+     Request: "Research web hosting for database" (FREE)
    - If no university: Catalyst Cloud ($85-150/mo)
    - Guide: docs/NZ_Hosting_Options.md
+   - ⚠️ DON'T request HPC cluster (WebTics is lightweight web hosting)
 
 3. **Privacy Level:** Pseudonymous
    - Participants get withdrawal codes
@@ -659,12 +709,12 @@ otago_example: https://webtics.otago.ac.nz
 webtics_support: simon.mccallum@gmail.com
 
 university_it:
-  auckland: its-research@auckland.ac.nz
-  victoria: its-research@vuw.ac.nz
-  otago: research-it@otago.ac.nz
-  canterbury: hpc@canterbury.ac.nz
-  massey: research-it@massey.ac.nz
-  aut: researchit@aut.ac.nz
+  auckland: AskAuckland web form or university@auckland.ac.nz
+  victoria: Service Desk web form or phone 463 5050
+  otago: university@otago.ac.nz or research@otago.ac.nz
+  canterbury: eResearch@canterbury.ac.nz (verified)
+  massey: contact@massey.ac.nz or web form
+  aut: research@aut.ac.nz or 0800 AUT ICT
 
 commercial:
   catalyst: sales@catalystcloud.nz

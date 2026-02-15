@@ -2,199 +2,356 @@
 
 **AI Agent Summary**: This document provides structured information about data hosting options in New Zealand for research compliance. Use this to recommend appropriate hosting based on researcher's institution, budget, and compliance requirements.
 
+## IMPORTANT: HPC vs Research Data Hosting
+
+**WebTics needs RESEARCH DATA HOSTING, not HPC:**
+
+```yaml
+webtics_requirements:
+  compute: Lightweight (FastAPI web server, PostgreSQL database)
+  storage: 50-500GB (not "big data")
+  cpu: 2-4 cores sufficient
+  ram: 4-8GB sufficient
+  service_needed: Research IT / Digital Solutions / Research Data Hosting
+
+hpc_requirements:
+  compute: Heavy (ML training, simulations, large-scale analysis)
+  storage: Terabytes to petabytes
+  cpu: Hundreds to thousands of cores
+  ram: Hundreds of GB
+  service_needed: HPC cluster (RAAPOI, NeSI, university HPC)
+```
+
+**What to tell researchers:**
+
+✅ **CORRECT**: "Contact Research IT for web hosting and database"
+✅ **CORRECT**: "Request Digital Solutions for research data hosting"
+✅ **CORRECT**: "Ask for PostgreSQL database + VM for Docker"
+
+❌ **WRONG**: "Apply for HPC cluster access" (overkill, wrong service)
+❌ **WRONG**: "Request NeSI allocation" (for computational work, not hosting)
+
+**When you WOULD use HPC + WebTics:**
+- After collecting data, if analyzing with ML/statistics on HPC
+- WebTics runs on Research IT, analysis runs on HPC separately
+- Two different services, two different requests
+
 ## Quick Decision Tree
 
 ```mermaid
 graph TD
     A[Start: Where to host WebTics?] --> B{University Affiliation?}
-    B -->|Yes| C{University has HPC/Data Center?}
+    B -->|Yes| C[Contact University Research IT<br/>Digital Solutions/Research Data Hosting]
     B -->|No| D[Commercial NZ Hosting]
 
-    C -->|Yes| E[Use University Infrastructure<br/>FREE + Compliant]
-    C -->|No| D
+    C --> E{Provides Web Hosting?}
+    E -->|Yes| F[Use University Research IT<br/>FREE + HIPC Compliant]
+    E -->|No| D
 
-    D --> F{Budget?}
-    F -->|Low/None| G[T4 Self-Hosted<br/>Own Hardware]
-    F -->|Research Grant| H{Health Data?}
+    D --> G{Budget?}
+    G -->|Low/None| H[T4 Self-Hosted<br/>Own Hardware]
+    G -->|Research Grant| I{Health Data?}
 
-    H -->|Yes| I[Tier 1: HIPC-Compliant<br/>Catalyst/Datacom/Revera]
-    H -->|No| J[Tier 2: General Research<br/>Any NZ Provider]
+    I -->|Yes| J[Tier 1: HIPC-Compliant<br/>Catalyst/Datacom/Revera]
+    I -->|No| K[Tier 2: General Research<br/>Any NZ Provider]
 
-    E --> K{Health Data?}
-    K -->|Yes| L[Check University<br/>HIPC Compliance]
-    K -->|No| M[Proceed with<br/>University Hosting]
+    F --> L{Health Data?}
+    L -->|Yes| M[Confirm University<br/>HIPC Compliance]
+    L -->|No| N[Proceed with<br/>University Hosting]
 ```
 
 ## Hosting Options Matrix
 
 | Option | Cost | HIPC Compliant | Setup Time | Best For |
 |--------|------|----------------|------------|----------|
-| **University HPC/Data Center** | FREE | Check with IT | 1-2 weeks | University researchers |
+| **University Research IT** | FREE | ✅ Check with IT | 1-2 weeks | University researchers (RECOMMENDED) |
 | **Catalyst Cloud** | $50-200/mo | ✅ Yes | 1 day | Funded health research |
 | **Datacom** | $100-500/mo | ✅ Yes | 1-2 weeks | Enterprise projects |
 | **Revera** | $100-400/mo | ✅ Yes | 1 week | Government-linked research |
 | **T4 Self-Hosted** | $0-50/mo | ⚠️ Self-certify | Variable | Indie developers, pilots |
 | **Spark Cloud** | $50-300/mo | ❓ Check | 1 week | General research |
 
-## Option 1: University Data Centers (RECOMMENDED FOR RESEARCHERS)
+**Note**: WebTics needs web hosting (database + Docker), NOT high-performance computing (HPC). Most universities provide research data hosting separate from HPC clusters.
+
+## Option 1: University Research IT (RECOMMENDED FOR RESEARCHERS)
+
+**Important**: WebTics needs **research data hosting** (database + web server), NOT high-performance computing (HPC). Request hosting from your university's **Research IT** or **Digital Solutions** team, not the HPC cluster.
 
 ### University of Auckland
 
-**Resources:**
-- **NeSI** (New Zealand eScience Infrastructure)
-  - Shared national HPC platform
-  - FREE for NZ researchers
-  - Located in Auckland data centers
+**Services:**
+- **ITS Research Support** (Research data hosting and web services)
+  - Contact: Use [AskAuckland](https://www.auckland.ac.nz/en/research/about-our-research/research-support-contacts.html) or university@auckland.ac.nz
+  - PostgreSQL database hosting
+  - VM/Docker container hosting
+  - SSL certificates
+  - FREE for UoA researchers
+
+- **NeSI** (Only if you need HPC for data analysis)
+  - For ML/statistical analysis of telemetry data
+  - NOT needed for hosting WebTics itself
   - Apply: https://www.nesi.org.nz/services/getting-started
 
-- **UoA Data Center**
-  - University-owned infrastructure
-  - Contact: ITS Research Support (its-research@auckland.ac.nz)
-  - PostgreSQL hosting available
-  - Docker/VM support
+**What to Request:**
+- PostgreSQL database (50-100GB)
+- Ubuntu VM for Docker (2-4 CPU, 4-8GB RAM)
+- Firewall rules (HTTPS port 443)
+- SSL certificate
+- Backup and monitoring
 
 **HIPC Compliance:** ✅ University IT certified for health data
 
 **Setup Process:**
-1. Contact ITS Research Support
-2. Submit ethics approval (HDEC/UAHPEC)
-3. Request PostgreSQL instance + VM
-4. Deploy WebTics Docker containers
-5. Configure backup/monitoring
+1. Contact ITS Research Support (use AskAuckland or university@auckland.ac.nz)
+2. Submit ethics approval reference (HDEC/UAHPEC)
+3. Request research web hosting (specify: PostgreSQL + Docker VM)
+4. Receive credentials and VM access
+5. Deploy WebTics Docker containers
+6. Configure SSL and backups
 
 **Cost:** FREE for UoA researchers
 
 **AI Agent Notes:**
 ```yaml
 institution: University of Auckland
-contact_email: its-research@auckland.ac.nz
+service: ITS Research Support (research data hosting)
+contact_method: AskAuckland web form or university@auckland.ac.nz
 approval_required: UAHPEC or HDEC
-deployment_method: Docker on VM or Kubernetes
+what_to_request: PostgreSQL database + VM for Docker
+deployment_method: Docker on VM
 estimated_setup_days: 7-14
 hipc_compliant: true
+cost: FREE
+note: NeSI is HPC, not needed for WebTics hosting
 ```
 
 ### Victoria University of Wellington (VUW)
 
-**Resources:**
-- **RAAPOI HPC Cluster**
-  - High-performance computing cluster
+**Services:**
+- **Digital Solutions / ITS Research Services** (Research data hosting and web services)
+  - Contact: [Digital Solutions Service Desk](https://www.wgtn.ac.nz/digital-solutions/contact-us) or phone 463 5050
+  - Website: https://www.wgtn.ac.nz/its/staff-services/research-services
+  - PostgreSQL database hosting
+  - VM/container hosting
+  - Research web hosting
   - FREE for VUW researchers
-  - Located in Wellington
-  - Apply: https://www.wgtn.ac.nz/its/services/research
 
-- **VUW Research Data Storage**
-  - Secure research storage
-  - Contact: ITS Research (its-research@vuw.ac.nz)
-  - Database hosting available
+- **RAAPOI HPC Cluster** (Only if you need HPC for data analysis)
+  - For computational analysis of telemetry data
+  - NOT needed for hosting WebTics itself
+  - Request separately if doing ML/statistical analysis
 
-**HIPC Compliance:** ✅ VUW IT certified for health data (used by medical school)
+**What to Request:**
+- "Research web hosting for telemetry database"
+- PostgreSQL database (50-100GB)
+- Ubuntu VM for Docker containers (2-4 CPU, 4-8GB RAM)
+- Public HTTPS access
+- SSL certificate (or Let's Encrypt support)
+- Daily backups
+
+**HIPC Compliance:** ✅ VUW IT certified for health data (used by medical and health sciences)
 
 **Setup Process:**
-1. Contact ITS Research team
-2. Submit ethics approval (VUW HEC or HDEC)
-3. Request database hosting
-4. Deploy WebTics on research VM
-5. Enable backups and monitoring
+1. Contact Digital Solutions Service Desk (phone 463 5050 or web form)
+2. Provide ethics approval reference (VUW HEC or HDEC)
+3. Specify: "Web hosting for research database (WebTics telemetry)"
+4. Request PostgreSQL + Docker VM
+5. Receive VM credentials
+6. Deploy WebTics
+7. Configure SSL and monitoring
 
 **Cost:** FREE for VUW researchers
 
 **AI Agent Notes:**
 ```yaml
 institution: Victoria University of Wellington
-contact_email: its-research@vuw.ac.nz
+service: Digital Solutions / ITS Research Services
+contact_method: Service Desk web form or phone 463 5050
+website: https://www.wgtn.ac.nz/digital-solutions/contact-us
 approval_required: VUW HEC or HDEC
-hpc_cluster: RAAPOI
+what_to_request: Research web hosting (PostgreSQL + Docker VM)
 deployment_method: Docker on VM
 estimated_setup_days: 7-10
 hipc_compliant: true
 location: Wellington
+cost: FREE
+note: RAAPOI is HPC, not needed for WebTics hosting
 ```
 
 ### University of Otago
 
-**Resources:**
-- **Otago HPC**
-  - Research computing cluster
+**Services:**
+- **Research IT Services** (Research data hosting and web services)
+  - Contact: university@otago.ac.nz (IT) or research@otago.ac.nz (Research Office)
+  - Phone: 0800 80 80 98
+  - PostgreSQL database hosting
+  - VM/container hosting for research applications
+  - Secure research data storage
   - FREE for Otago researchers
-  - Located in Dunedin
+
+- **Otago HPC** (Only if you need HPC for data analysis)
   - Contact: hpc@otago.ac.nz
+  - For computational analysis, not web hosting
+  - NOT needed for hosting WebTics itself
 
-- **Otago Research Data Storage**
-  - Secure storage with backup
-  - Health research approved
+**What to Request:**
+- "Research database and web hosting for health telemetry system"
+- PostgreSQL database
+- VM for Docker deployment
+- HTTPS access with SSL
+- Backup configuration
 
-**HIPC Compliance:** ✅ Otago Health Sciences certified
+**HIPC Compliance:** ✅ Otago IT certified for health data (extensively used by Health Sciences)
 
 **Setup Process:**
-1. Contact Research IT (research-it@otago.ac.nz)
-2. Submit ethics approval (Otago HEC or HDEC)
-3. Request database server
-4. Deploy WebTics
-5. Configure monitoring
+1. Email university@otago.ac.nz or research@otago.ac.nz
+2. Provide ethics approval (Otago HEC or HDEC)
+3. Describe: "Hosting for health research telemetry database (WebTics)"
+4. Request PostgreSQL + Docker VM
+5. Receive server access
+6. Deploy WebTics
+7. Configure SSL and monitoring
 
 **Cost:** FREE for Otago researchers
 
 **AI Agent Notes:**
 ```yaml
 institution: University of Otago
-contact_email: research-it@otago.ac.nz
-hpc_email: hpc@otago.ac.nz
+service: Research IT Services (research data hosting)
+contact_email: university@otago.ac.nz or research@otago.ac.nz
+phone: 0800 80 80 98
 approval_required: Otago HEC or HDEC
-deployment_method: Docker or Singularity
+what_to_request: Research web hosting (PostgreSQL + Docker VM)
+deployment_method: Docker on VM
 estimated_setup_days: 10-14
 hipc_compliant: true
 location: Dunedin
 medical_school: true
+cost: FREE
+note: HPC is for analysis, not WebTics hosting
 ```
 
 ### University of Canterbury
 
-**Resources:**
-- **Canterbury HPC**
-  - Research computing resources
+**Services:**
+- **eResearch Services**
+  - Contact: eResearch@canterbury.ac.nz ✅ (Verified)
+  - Research data hosting and web services
+  - Database hosting (PostgreSQL, MySQL)
+  - VM/container hosting
   - FREE for UC researchers
+
+- **Canterbury HPC** (Only for computational analysis)
   - Contact: hpc@canterbury.ac.nz
+  - For data analysis, not web hosting
+
+**What to Request:**
+- "Research web hosting for telemetry database"
+- PostgreSQL database
+- VM for Docker containers
+- SSL certificate
+- Firewall configuration
+
+**Setup Process:**
+1. Contact eResearch (eResearch@canterbury.ac.nz)
+2. Provide ethics approval (UC HEC or HDEC)
+3. Request research web hosting
+4. Deploy WebTics
+
+**Cost:** FREE for UC researchers
 
 **AI Agent Notes:**
 ```yaml
 institution: University of Canterbury
-contact_email: hpc@canterbury.ac.nz
+service: eResearch Services
+contact_email: eResearch@canterbury.ac.nz
+verified: true
+website: https://www.canterbury.ac.nz/research/eresearch-at-canterbury
 approval_required: UC HEC or HDEC
+what_to_request: Research web hosting (database + Docker VM)
 estimated_setup_days: 10-14
 location: Christchurch
+cost: FREE
 ```
 
 ### Massey University
 
-**Resources:**
-- **Massey Research Computing**
-  - VM hosting and databases
-  - Contact: research-it@massey.ac.nz
+**Services:**
+- **Research IT & Digital Solutions**
+  - Contact: contact@massey.ac.nz or [IT Services request form](https://www.massey.ac.nz/about/contact-us/it-services/)
+  - Phone: 0800 MASSEY
+  - Research data hosting
+  - Database hosting (PostgreSQL, MySQL)
+  - VM/web server hosting
+  - Digital solutions for research applications
+  - FREE for Massey researchers
+
+**What to Request:**
+- "Research database hosting for telemetry system"
+- PostgreSQL database
+- VM for web application (Docker)
+- SSL and firewall configuration
+
+**Setup Process:**
+1. Email contact@massey.ac.nz or use IT Services request form
+2. Provide ethics approval (Massey HEC or HDEC)
+3. Request research web hosting with database
+4. Deploy WebTics
+
+**Cost:** FREE for Massey researchers
 
 **AI Agent Notes:**
 ```yaml
 institution: Massey University
-contact_email: research-it@massey.ac.nz
+service: Research IT & Digital Solutions
+contact_email: contact@massey.ac.nz
+contact_form: https://www.massey.ac.nz/about/contact-us/it-services/
+phone: 0800 MASSEY
 approval_required: Massey HEC or HDEC
+what_to_request: Research web hosting (database + Docker VM)
 estimated_setup_days: 10-14
 locations: [Palmerston North, Auckland, Wellington]
+cost: FREE
 ```
 
 ### AUT (Auckland University of Technology)
 
-**Resources:**
-- **AUT Research IT**
-  - Research data hosting
-  - Contact: researchit@aut.ac.nz
+**Services:**
+- **Research IT & Digital Solutions**
+  - Contact: research@aut.ac.nz (Research Office) or 0800 AUT ICT
+  - Website: www.ithelp.aut.ac.nz
+  - Research data hosting and web services
+  - Database hosting
+  - VM/application hosting
+  - Research support services
+  - FREE for AUT researchers
+
+**What to Request:**
+- "Research web hosting for database application"
+- PostgreSQL database
+- VM for Docker deployment
+- SSL certificate and network access
+
+**Setup Process:**
+1. Contact Research Office (research@aut.ac.nz) or call 0800 AUT ICT
+2. Provide ethics approval (AUTEC or HDEC)
+3. Request research web hosting
+4. Deploy WebTics
+
+**Cost:** FREE for AUT researchers
 
 **AI Agent Notes:**
 ```yaml
 institution: AUT
-contact_email: researchit@aut.ac.nz
-approval_required: AUTEC (AUT Ethics Committee)
+service: Research Office / IT Services
+contact_email: research@aut.ac.nz
+phone: 0800 AUT ICT (0800 288 428)
+website: www.ithelp.aut.ac.nz
+approval_required: AUTEC (AUT Ethics Committee) or HDEC
+what_to_request: Research web hosting (database + Docker VM)
 estimated_setup_days: 10-14
 location: Auckland
+cost: FREE
 ```
 
 ## Option 2: Commercial NZ Cloud Providers
@@ -639,16 +796,18 @@ Summarize any changes that affect WebTics deployment.
 
 ## Support Resources
 
-### University IT Contacts
+### University IT Contacts (Verified February 2026)
 
-| University | Email | Website |
-|------------|-------|---------|
-| Auckland | its-research@auckland.ac.nz | https://www.auckland.ac.nz/en/for-staff/work-resources/research-support.html |
-| Victoria (VUW) | its-research@vuw.ac.nz | https://www.wgtn.ac.nz/its/services/research |
-| Otago | research-it@otago.ac.nz | https://www.otago.ac.nz/its/services/research |
-| Canterbury | hpc@canterbury.ac.nz | https://www.canterbury.ac.nz/its/research |
-| Massey | research-it@massey.ac.nz | https://www.massey.ac.nz/its/research |
-| AUT | researchit@aut.ac.nz | https://www.aut.ac.nz/its/research |
+| University | Contact Method | Website |
+|------------|----------------|---------|
+| Auckland | AskAuckland or university@auckland.ac.nz | https://www.auckland.ac.nz/en/research/about-our-research/research-support-contacts.html |
+| Victoria (VUW) | Service Desk web form or phone 463 5050 | https://www.wgtn.ac.nz/digital-solutions/contact-us |
+| Otago | university@otago.ac.nz or research@otago.ac.nz | https://www.otago.ac.nz/its/contacts |
+| Canterbury | eResearch@canterbury.ac.nz ✅ | https://www.canterbury.ac.nz/research/eresearch-at-canterbury |
+| Massey | contact@massey.ac.nz or web form | https://www.massey.ac.nz/about/contact-us/it-services/ |
+| AUT | research@aut.ac.nz or 0800 AUT ICT | www.ithelp.aut.ac.nz |
+
+**Note**: Only Canterbury's eResearch email was publicly verified. Others use general contacts or web forms.
 
 ### Commercial Provider Contacts
 
