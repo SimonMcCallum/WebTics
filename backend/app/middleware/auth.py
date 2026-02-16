@@ -12,6 +12,7 @@ import logging
 from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+security_logger = logging.getLogger("webtics.security")
 
 # API Key header
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -147,7 +148,18 @@ async def auth_middleware(request: Request, call_next):
     client_id = verify_api_key(api_key)
 
     if not client_id:
-        logger.warning(f"Unauthorized request to {request.url.path} from {request.client.host if request.client else 'unknown'}")
+        client_ip = request.client.host if request.client else "unknown"
+        # Log security event
+        security_logger.warning(
+            f"Authentication failure: Invalid or missing API key",
+            extra={
+                "event_type": "auth_failure",
+                "ip_address": client_ip,
+                "endpoint": request.url.path,
+                "method": request.method,
+                "api_key_provided": bool(api_key),
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API key",
@@ -182,9 +194,19 @@ async def rate_limit_middleware(request: Request, call_next):
     allowed, metadata = rate_limiter.is_allowed(client_id)
 
     if not allowed:
-        logger.warning(
-            f"Rate limit exceeded for client {client_id} "
-            f"(IP: {client_ip}, path: {request.url.path})"
+        # Log security event
+        security_logger.warning(
+            f"Rate limit exceeded",
+            extra={
+                "event_type": "rate_limit_exceeded",
+                "client_id": client_id,
+                "ip_address": client_ip,
+                "endpoint": request.url.path,
+                "method": request.method,
+                "current_count": metadata["current_count"],
+                "limit": metadata["limit"],
+                "retry_after": metadata["retry_after"],
+            }
         )
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

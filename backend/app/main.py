@@ -14,13 +14,21 @@ from .routers import research
 from .middleware.data_validation import validation_middleware
 from .middleware.security import SecurityHeadersMiddleware, https_redirect_middleware
 from .middleware.auth import auth_middleware, rate_limit_middleware
+from .logging_config import setup_logging, get_logger
 
-# Configure logging
-logging.basicConfig(
+# Configure structured logging
+environment = os.getenv("ENVIRONMENT", "development")
+use_json_logs = environment == "production"
+enable_file_logs = os.getenv("ENABLE_FILE_LOGGING", "false").lower() == "true"
+
+setup_logging(
     level=os.getenv("LOG_LEVEL", "INFO"),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    log_dir=os.getenv("LOG_DIR", "/var/log/webtics"),
+    use_json=use_json_logs,
+    enable_file_logging=enable_file_logs,
 )
-logger = logging.getLogger(__name__)
+
+logger = get_logger(__name__)
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
