@@ -13,6 +13,7 @@ from .database import engine, get_db
 from .routers import research
 from .middleware.data_validation import validation_middleware
 from .middleware.security import SecurityHeadersMiddleware, https_redirect_middleware
+from .middleware.auth import auth_middleware, rate_limit_middleware
 
 # Configure logging
 logging.basicConfig(
@@ -34,9 +35,11 @@ app = FastAPI(
 # Include research ethics router
 app.include_router(research.router)
 
-# Security middleware
+# Security middleware (order matters: first added = outermost)
 app.add_middleware(SecurityHeadersMiddleware)
 app.middleware("http")(https_redirect_middleware)
+app.middleware("http")(rate_limit_middleware)  # Rate limit before auth
+app.middleware("http")(auth_middleware)  # Auth before validation
 app.middleware("http")(validation_middleware)
 
 # CORS middleware - use environment variable for allowed origins
@@ -79,6 +82,20 @@ async def root():
         "status": "online",
         "service": "WebTics Telemetry API",
         "version": "0.1.0"
+    }
+
+
+@app.get("/health")
+async def health():
+    """Detailed health check endpoint."""
+    from .middleware.auth import get_rate_limit_stats
+
+    return {
+        "status": "healthy",
+        "service": "WebTics Telemetry API",
+        "version": "0.1.0",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "rate_limit_stats": get_rate_limit_stats()
     }
 
 
