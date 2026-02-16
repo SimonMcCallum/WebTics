@@ -5,15 +5,15 @@ services:
     image: postgres:16-alpine
     container_name: webtics_db
     environment:
-      POSTGRES_USER: webtics
-      POSTGRES_PASSWORD: webtics
-      POSTGRES_DB: webtics
+      POSTGRES_USER: ${POSTGRES_USER:-webtics}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-webtics_dev_only}
+      POSTGRES_DB: ${POSTGRES_DB:-webtics}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U webtics"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-webtics}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,7 +22,15 @@ services:
     build: ./backend
     container_name: webtics_backend
     environment:
-      DATABASE_URL: postgresql://webtics:webtics@db:5432/webtics
+      DATABASE_URL: ${DATABASE_URL:-postgresql://webtics:webtics_dev_only@db:5432/webtics}
+      SECRET_KEY: ${SECRET_KEY:-dev_secret_key_change_in_production}
+      WEBTICS_API_KEY: ${WEBTICS_API_KEY:-dev_api_key_change_in_production}
+      WITHDRAWAL_SECRET_KEY: ${WITHDRAWAL_SECRET_KEY:-dev_withdrawal_key_change_in_production}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    env_file:
+      - .env
     ports:
       - "8013:8013"
     depends_on:

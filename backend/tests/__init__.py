@@ -1,0 +1,3 @@
+"""
+WebTics test suite.
+"""

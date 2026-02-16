@@ -1,13 +1,25 @@
 """FastAPI main application for WebTics telemetry backend."""
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
+import os
+import logging
 
 from . import models, schemas, models_research
 from .database import engine, get_db
 from .routers import research
+from .middleware.data_validation import validation_middleware
+from .middleware.security import SecurityHeadersMiddleware, https_redirect_middleware
+
+# Configure logging
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
@@ -22,14 +34,42 @@ app = FastAPI(
 # Include research ethics router
 app.include_router(research.router)
 
-# CORS middleware for Godot web exports
+# Security middleware
+app.add_middleware(SecurityHeadersMiddleware)
+app.middleware("http")(https_redirect_middleware)
+app.middleware("http")(validation_middleware)
+
+# CORS middleware - use environment variable for allowed origins
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+logger.info(f"CORS allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Restrict in production
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch all unhandled exceptions and log them."""
+    logger.error(
+        f"Unhandled exception: {exc}",
+        exc_info=True,
+        extra={
+            "request_path": request.url.path,
+            "request_method": request.method,
+            "client_ip": request.client.host if request.client else "unknown",
+        }
+    )
+
+    # Don't expose internal errors to clients
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error. Please contact support."}
+    )
 
 
 @app.get("/")
