@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Claim your account — {{ student_brand }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:460px;margin:40px auto;">
+  <h2>Claim your account</h2>
+  <p class="muted">Enter the email and temporary password your instructor sent you, then
+    choose your own password and the display name you'd like to claim.</p>
+  <div id="msg" class="msg"></div>
+  <label>Email</label>
+  <input id="email" type="email" autocomplete="username">
+  <label>Temporary password</label>
+  <input id="temp" type="password">
+  <label>Display name (the name you claim)</label>
+  <input id="name" type="text" placeholder="Ada Lovelace">
+  <label>New password (min 8 characters)</label>
+  <input id="newpw" type="password" autocomplete="new-password">
+  <button onclick="doClaim()">Claim account</button>
+  <p class="muted" style="margin-top:14px"><a href="/app/login">Back to log in</a></p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function doClaim() {
+  const body = {
+    email: document.getElementById("email").value.trim(),
+    temp_password: document.getElementById("temp").value,
+    new_password: document.getElementById("newpw").value,
+    display_name: document.getElementById("name").value.trim() || null,
+  };
+  try {
+    const r = await WT.api("POST", "/api/v1/auth/claim", body);
+    WT.setToken(r.access_token);
+    window.location = "/app/dashboard";
+  } catch (e) { WT.show("msg", e.message, "error"); }
+}
+</script>
+{% endblock %}

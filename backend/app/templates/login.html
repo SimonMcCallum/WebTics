@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Log in — {{ student_brand }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:440px;margin:40px auto;">
+  <h2>Log in</h2>
+  <div id="msg" class="msg"></div>
+  <label>Email</label>
+  <input id="email" type="email" autocomplete="username" placeholder="you@university.ac.nz">
+  <label>Password</label>
+  <input id="password" type="password" autocomplete="current-password">
+  <button onclick="doLogin()">Log in</button>
+  <p class="muted" style="margin-top:16px">
+    First time here? <a href="/app/claim">Claim your account</a> with the temporary
+    password your instructor emailed you.
+  </p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function doLogin() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  try {
+    const r = await WT.api("POST", "/api/v1/auth/login", { email, password });
+    WT.setToken(r.access_token);
+    window.location = r.must_change_password ? "/app/claim" : "/app/dashboard";
+  } catch (e) { WT.show("msg", e.message, "error"); }
+}
+document.getElementById("password").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+</script>
+{% endblock %}

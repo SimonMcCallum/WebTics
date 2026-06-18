@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Admin — {{ student_brand }}{% endblock %}
+{% block content %}
+<h1>Instructor admin</h1>
+<div id="msg" class="msg"></div>
+
+<div class="row">
+  <div class="card">
+    <h2>Create a course</h2>
+    <label>Course code</label>
+    <input id="ccode" placeholder="CGRA350">
+    <label>Name</label>
+    <input id="cname" placeholder="Computer Graphics 2026">
+    <label>Access ends at (account expiry)</label>
+    <input id="cends" type="datetime-local">
+    <label>Discord guild IDs (future signup, optional)</label>
+    <input id="cguilds" placeholder="comma,separated,ids">
+    <button onclick="createCourse()">Create course</button>
+  </div>
+
+  <div class="card">
+    <h2>Import roster</h2>
+    <p class="muted">CSV with an <code>email</code> column (optional <code>name</code>). Creates
+      unclaimed accounts and returns temp passwords to email out.</p>
+    <label>Course code</label>
+    <input id="rcode" placeholder="CGRA350">
+    <label>Roster CSV</label>
+    <input id="rfile" type="file" accept=".csv">
+    <button onclick="importRoster()">Import &amp; generate passwords</button>
+  </div>
+</div>
+
+<div id="credsCard" class="card" style="display:none">
+  <h2>New credentials (email these out)</h2>
+  <p class="muted">Copy this table or download the CSV. Temp passwords are not recoverable later.</p>
+  <button class="secondary" onclick="downloadCreds()">Download CSV</button>
+  <div id="creds"></div>
+</div>
+
+<div class="card">
+  <h2>Server usage</h2>
+  <button class="secondary" onclick="loadUsage()">Refresh</button>
+  <div id="usage"></div>
+</div>
+
+<div class="card">
+  <h2>Accounts</h2>
+  <button class="secondary" onclick="loadUsers()">Refresh</button>
+  <div id="users"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+WT.requireAuth();
+let lastCreds = [];
+
+async function createCourse() {
+  const body = {
+    code: document.getElementById("ccode").value.trim(),
+    name: document.getElementById("cname").value.trim() || null,
+    ends_at: document.getElementById("cends").value ? new Date(document.getElementById("cends").value).toISOString() : null,
+    discord_guild_ids: document.getElementById("cguilds").value.trim() || null,
+  };
+  try { await WT.api("POST", "/api/v1/admin/courses", body); WT.show("msg", "Course created", "ok"); }
+  catch (e) { WT.show("msg", e.message, "error"); }
+}
+
+async function importRoster() {
+  const file = document.getElementById("rfile").files[0];
+  const code = document.getElementById("rcode").value.trim();
+  if (!file || !code) return WT.show("msg", "Pick a course code and a CSV file", "error");
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("course_code", code);
+  try {
+    const r = await WT.upload("/api/v1/admin/roster", fd);
+    lastCreds = r.created;
+    WT.show("msg", `Created ${r.created_count}, skipped ${r.skipped_count} existing`, "ok");
+    renderCreds(r.created);
+  } catch (e) { WT.show("msg", e.message, "error"); }
+}
+
+function renderCreds(creds) {
+  const card = document.getElementById("credsCard");
+  if (!creds.length) { card.style.display = "none"; return; }
+  card.style.display = "block";
+  let html = "<table><tr><th>Email</th><th>Name</th><th>Temp password</th></tr>";
+  for (const c of creds) html += `<tr><td>${c.email}</td><td>${c.name||""}</td><td><code>${c.temp_password}</code></td></tr>`;
+  document.getElementById("creds").innerHTML = html + "</table>";
+}
+
+function downloadCreds() {
+  const rows = [["email","name","temp_password"], ...lastCreds.map(c => [c.email, c.name, c.temp_password])];
+  const csv = rows.map(r => r.map(x => `"${(x||"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
+  a.download = "credentials.csv"; a.click();
+}
+
+async function loadUsage() {
+  try {
+    const u = await WT.api("GET", "/api/v1/admin/usage");
+    let html = `<p class="muted">${u.total_games} games &middot; ${u.total_mb_used} MB total</p>
+      <table><tr><th>Game</th><th>Owner</th><th>MB</th><th>%</th><th>Events</th></tr>`;
+    for (const g of u.games) html += `<tr><td>${g.name} <code>${g.measurement_id}</code></td><td>${g.owner_user_id}</td><td>${g.mb_used}</td><td>${g.percent}%</td><td>${g.events_stored}</td></tr>`;
+    document.getElementById("usage").innerHTML = html + "</table>";
+  } catch (e) { WT.show("msg", e.message, "error"); }
+}
+
+async function loadUsers() {
+  try {
+    const users = await WT.api("GET", "/api/v1/admin/users");
+    let html = "<table><tr><th>Email</th><th>Name</th><th>Role</th><th>Claimed</th><th>Expires</th><th>Active</th></tr>";
+    for (const u of users) html += `<tr><td>${u.email}</td><td>${u.display_name||u.roster_name||""}</td><td>${u.role}</td><td>${u.is_claimed?"yes":"no"}</td><td>${u.expires_at?new Date(u.expires_at).toLocaleDateString():"—"}</td><td>${u.is_active?"yes":"no"}</td></tr>`;
+    document.getElementById("users").innerHTML = html + "</table>";
+  } catch (e) { WT.show("msg", e.message, "error"); }
+}
+loadUsage(); loadUsers();
+</script>
+{% endblock %}

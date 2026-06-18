@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ student_brand }}{% endblock %}
+{% block content %}
+<h1>Your games</h1>
+<div id="msg" class="msg"></div>
+
+<div class="card">
+  <h2>Register a new game</h2>
+  <div class="row">
+    <div style="flex:2;min-width:220px">
+      <label>Game name</label>
+      <input id="gname" placeholder="My Platformer">
+    </div>
+    <div style="flex:1;min-width:140px">
+      <label>Platform</label>
+      <select id="gplatform">
+        <option value="godot">Godot</option>
+        <option value="web">Web</option>
+        <option value="unreal">Unreal</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+  </div>
+  <button onclick="createGame()">Register game</button>
+</div>
+
+<div id="newsecret" class="card" style="display:none;border-color:var(--warn)">
+  <h2>&#9888; Save your API secret now</h2>
+  <p class="muted">This is the only time the secret is shown. Paste it into your game's
+    config. You can rotate it later if it leaks.</p>
+  <p><strong>measurement_id:</strong> <span id="ns_mid" class="secret"></span></p>
+  <p><strong>api_secret:</strong> <span id="ns_secret" class="secret"></span></p>
+  <details>
+    <summary>Godot snippet</summary>
+    <pre id="ns_godot"></pre>
+  </details>
+  <details>
+    <summary>Web snippet</summary>
+    <pre id="ns_web"></pre>
+  </details>
+  <button class="secondary" onclick="document.getElementById('newsecret').style.display='none'">Done</button>
+</div>
+
+<div id="games"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+WT.requireAuth();
+const BASE = {{ public_base_url|tojson }};
+
+function godotSnippet(mid, secret) {
+  return `# autoload LudogogyLogging, then:
+LudogogyLogging.start("${mid}", "${secret}", "${BASE}")
+LudogogyLogging.event("level_up", { "level": 5 })`;
+}
+function webSnippet(mid, secret) {
+  return `<script src="${BASE}/sdk/webtics.js"><\/script>
+<script>
+  webtics('config', '${mid}', { api_secret: '${secret}', base_url: '${BASE}' });
+  webtics('event', 'level_up', { level: 5, character: 'mage' });
+<\/script>`;
+}
+
+async function createGame() {
+  const name = document.getElementById("gname").value.trim();
+  const platform = document.getElementById("gplatform").value;
+  if (!name) return WT.show("msg", "Enter a game name", "error");
+  try {
+    const g = await WT.api("POST", "/api/v1/games", { name, platform });
+    document.getElementById("ns_mid").textContent = g.measurement_id;
+    document.getElementById("ns_secret").textContent = g.api_secret;
+    document.getElementById("ns_godot").textContent = godotSnippet(g.measurement_id, g.api_secret);
+    document.getElementById("ns_web").textContent = webSnippet(g.measurement_id, g.api_secret);
+    document.getElementById("newsecret").style.display = "block";
+    document.getElementById("gname").value = "";
+    loadGames();
+  } catch (e) { WT.show("msg", e.message, "error"); }
+}
+
+async function rotate(id) {
+  if (!confirm("Rotate the secret? The old one stops working immediately.")) return;
+  try {
+    const g = await WT.api("POST", `/api/v1/games/${id}/rotate-secret`);
+    document.getElementById("ns_mid").textContent = g.measurement_id;
+    document.getElementById("ns_secret").textContent = g.api_secret;
+    document.getElementById("ns_godot").textContent = godotSnippet(g.measurement_id, g.api_secret);
+    document.getElementById("ns_web").textContent = webSnippet(g.measurement_id, g.api_secret);
+    document.getElementById("newsecret").style.display = "block";
+  } catch (e) { WT.show("msg", e.message, "error"); }
+}
+
+async function del(id, name) {
+  if (!confirm(`Delete "${name}" and all its data? This cannot be undone.`)) return;
+  try { await WT.api("DELETE", `/api/v1/games/${id}`); loadGames(); }
+  catch (e) { WT.show("msg", e.message, "error"); }
+}
+
+async function loadGames() {
+  let games;
+  try { games = await WT.api("GET", "/api/v1/games"); }
+  catch (e) { WT.show("msg", e.message, "error"); return; }
+  const wrap = document.getElementById("games");
+  if (!games.length) { wrap.innerHTML = '<p class="muted">No games yet — register one above.</p>'; return; }
+  wrap.innerHTML = "";
+  for (const g of games) {
+    const pct = g.max_bytes ? (g.bytes_used / g.max_bytes * 100) : 0;
+    const cls = pct >= 100 ? "full" : (pct >= 80 ? "high" : "");
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">${g.name} <span class="pill">${g.platform || "game"}</span></h2>
+        <code>${g.measurement_id}</code>
+      </div>
+      <p class="muted" style="margin:10px 0 4px">Storage: ${WT.fmtBytes(g.bytes_used)} of
+         ${WT.fmtBytes(g.max_bytes)} (${pct.toFixed(1)}%) &middot; ${g.events_stored} events &middot;
+         limit ${g.rate_per_min}/min (burst ${g.burst})</p>
+      <div class="bar"><span class="${cls}" style="width:${Math.min(pct,100)}%"></span></div>
+      <button class="secondary" onclick="rotate(${g.id})">Rotate secret</button>
+      <button class="danger" onclick="del(${g.id}, ${JSON.stringify(g.name)})">Delete</button>`;
+    wrap.appendChild(card);
+  }
+}
+loadGames();
+</script>
+{% endblock %}

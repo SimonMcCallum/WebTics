@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ student_brand }} — easy game analytics{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Add analytics to your game in two lines.</h1>
+  <p>
+    {{ student_brand }} is a friendly, GA4-style telemetry service for your course games.
+    Register your game, drop in the plugin, and watch the events arrive — the same
+    concepts (named events + parameters) you'll use later in Google Analytics and
+    Apple App Analytics.
+  </p>
+  <p>
+    <a class="btn" href="/app/login">Log in / claim your account</a>
+    <a class="btn secondary" href="/app/docs">Read the quickstart</a>
+  </p>
+</section>
+
+<div class="row">
+  <div class="card">
+    <h2>1. Claim your account</h2>
+    <p class="muted">Your instructor emails you a name and temporary password. Claim it to
+      set your own password. Access lasts for the duration of your course.</p>
+  </div>
+  <div class="card">
+    <h2>2. Register your game</h2>
+    <p class="muted">Get a <code>measurement_id</code> and an <code>api_secret</code> —
+      exactly like a Google Analytics property.</p>
+  </div>
+  <div class="card">
+    <h2>3. Send events</h2>
+    <p class="muted">Use the Godot plugin or the web snippet. Per-game rate &amp; storage
+      limits keep things tidy and fair.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>GA4-style, by design</h2>
+  <pre>webtics('event', 'level_up', { level: 5, character: 'mage' });</pre>
+  <p class="green-note">
+    {{ service_brand }} is the professional version of this service — simple, self-hosted
+    logging for New Zealand game developers who want their data kept local and running on
+    green energy. Skills you build here transfer straight to the paid analytics tools.
+  </p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  // If already logged in, offer the dashboard.
+  if (WT.token()) {
+    document.querySelector(".hero p:last-of-type").innerHTML =
+      '<a class="btn" href="/app/dashboard">Go to your dashboard</a>';
+  }
+</script>
+{% endblock %}

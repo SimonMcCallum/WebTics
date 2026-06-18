@@ -4,7 +4,8 @@ Implements input validation, range checks, and error logging.
 Prevents data corruption and injection attacks.
 """
 
-from fastapi import Request, HTTPException
+from fastapi import Request
+from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 import re
 import logging
@@ -130,40 +131,36 @@ def validate_session_data(session_data: dict) -> None:
             raise ValidationError("build_number exceeds max length 50")
 
 
+def _validate_body(body: dict, path: str) -> None:
+    """Dispatch validation by path. Raises ValidationError on failure."""
+    if path.startswith("/api/v1/events"):
+        validate_event_data(body)
+    elif path.startswith("/api/v1/sessions"):
+        validate_session_data(body)
+
+
 async def validation_middleware(request: Request, call_next):
-    """FastAPI middleware to validate all incoming requests."""
+    """Validate incoming event/session POSTs.
 
-    # Only validate POST requests with JSON body
-    if request.method == "POST":
-        # Validate event creation
-        if request.url.path.startswith("/api/v1/events"):
-            try:
-                body = await request.json()
-                validate_event_data(body)
-            except ValidationError as e:
-                logger.warning(f"Event validation failed: {e}")
-                raise HTTPException(status_code=400, detail=str(e))
-            except json.JSONDecodeError as e:
-                logger.warning(f"Invalid JSON in event: {e}")
-                raise HTTPException(status_code=400, detail="Invalid JSON format")
-            except Exception as e:
-                logger.error(f"Unexpected validation error: {e}", exc_info=True)
-                raise HTTPException(status_code=400, detail="Invalid request data")
+    NOTE: exceptions raised inside Starlette HTTP middleware are NOT turned into
+    responses by FastAPI's exception handlers (they propagate to the server error
+    handler and surface as 500). So we must *return* a JSONResponse here, not raise.
+    """
+    path = request.url.path
+    if request.method == "POST" and (
+        path.startswith("/api/v1/events") or path.startswith("/api/v1/sessions")
+    ):
+        try:
+            body = await request.json()
+            _validate_body(body, path)
+        except ValidationError as e:
+            logger.warning(f"Validation failed for {path}: {e}")
+            return JSONResponse(status_code=400, content={"detail": str(e)})
+        except json.JSONDecodeError as e:
+            logger.warning(f"Invalid JSON for {path}: {e}")
+            return JSONResponse(status_code=400, content={"detail": "Invalid JSON format"})
+        except Exception as e:
+            logger.error(f"Unexpected validation error for {path}: {e}", exc_info=True)
+            return JSONResponse(status_code=400, content={"detail": "Invalid request data"})
 
-        # Validate session creation
-        elif request.url.path.startswith("/api/v1/sessions"):
-            try:
-                body = await request.json()
-                validate_session_data(body)
-            except ValidationError as e:
-                logger.warning(f"Session validation failed: {e}")
-                raise HTTPException(status_code=400, detail=str(e))
-            except json.JSONDecodeError as e:
-                logger.warning(f"Invalid JSON in session: {e}")
-                raise HTTPException(status_code=400, detail="Invalid JSON format")
-            except Exception as e:
-                logger.error(f"Unexpected validation error: {e}", exc_info=True)
-                raise HTTPException(status_code=400, detail="Invalid request data")
-
-    response = await call_next(request)
-    return response
+    return await call_next(request)

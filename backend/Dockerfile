@@ -6,7 +6,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code (includes app/templates and app/static for the portal + web SDK)
 COPY ./app ./app
 
 # Expose port

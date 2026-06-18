@@ -2,15 +2,18 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
+from pathlib import Path
 import os
 import logging
 
-from . import models, schemas, models_research
+from . import models, schemas, models_research, models_accounts
 from .database import engine, get_db
-from .routers import research
+from .routers import research, auth as auth_router, games, admin, ga4, portal
+from .auth import require_anon_ingest
 from .middleware.data_validation import validation_middleware
 from .middleware.security import SecurityHeadersMiddleware, https_redirect_middleware
 
@@ -24,15 +27,30 @@ logger = logging.getLogger(__name__)
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 models_research.Base.metadata.create_all(bind=engine)
+models_accounts.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="WebTics Telemetry API",
     description="Lightweight game telemetry and metrics system with research ethics compliance",
-    version="0.1.0"
+    version="0.2.0"
 )
 
-# Include research ethics router
+# Routers: research ethics, student accounts/games, admin, GA4 ingest, and web portal.
 app.include_router(research.router)
+app.include_router(auth_router.router)
+app.include_router(games.router)
+app.include_router(admin.router)
+app.include_router(ga4.router)
+app.include_router(portal.router)
+
+# Static assets for the portal + served web SDK.
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+if _STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+# Serve the JS web SDK at a stable public path (sdk/web/webtics.js copied into static/sdk).
+_SDK_DIR = _STATIC_DIR / "sdk"
+if _SDK_DIR.exists():
+    app.mount("/sdk", StaticFiles(directory=str(_SDK_DIR)), name="sdk")
 
 # Security middleware
 app.add_middleware(SecurityHeadersMiddleware)
@@ -72,6 +90,43 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+@app.on_event("startup")
+def _bootstrap_admin():
+    """Seed an admin from env on startup (idempotent).
+
+    Lets the home-server deployment create the first instructor account without needing
+    the CLI scripts inside the image: set WEBTICS_BOOTSTRAP_ADMIN_EMAIL +
+    WEBTICS_BOOTSTRAP_ADMIN_PASSWORD in .env. Safe to leave set — it only updates that
+    one account's password and never expires it.
+    """
+    email = os.getenv("WEBTICS_BOOTSTRAP_ADMIN_EMAIL")
+    password = os.getenv("WEBTICS_BOOTSTRAP_ADMIN_PASSWORD")
+    if not email or not password:
+        return
+    from .database import SessionLocal
+    from .models_accounts import User
+    from .auth import hash_password
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == email.lower()).first()
+        if user is None:
+            user = User(email=email.lower(), display_name="Instructor")
+            db.add(user)
+        user.password_hash = hash_password(password)
+        user.role = "admin"
+        user.is_active = True
+        user.is_claimed = True
+        user.must_change_password = False
+        user.expires_at = None
+        db.commit()
+        logger.info("Bootstrap admin ensured: %s", email)
+    except Exception:
+        logger.exception("Admin bootstrap failed")
+        db.rollback()
+    finally:
+        db.close()
+
+
 @app.get("/")
 async def root():
     """Health check endpoint."""
@@ -82,7 +137,7 @@ async def root():
     }
 
 
-@app.post("/api/v1/sessions", response_model=schemas.MetricSessionResponse)
+@app.post("/api/v1/sessions", response_model=schemas.MetricSessionResponse, dependencies=[Depends(require_anon_ingest)])
 async def create_session(
     session_data: schemas.MetricSessionCreate,
     db: Session = Depends(get_db)
@@ -106,7 +161,7 @@ async def create_session(
     return db_session
 
 
-@app.post("/api/v1/sessions/{session_id}/close")
+@app.post("/api/v1/sessions/{session_id}/close", dependencies=[Depends(require_anon_ingest)])
 async def close_session(session_id: int, db: Session = Depends(get_db)):
     """Close a metric session."""
     session = db.query(models.MetricSession).filter(
@@ -121,7 +176,7 @@ async def close_session(session_id: int, db: Session = Depends(get_db)):
     return {"status": "closed", "session_id": session_id}
 
 
-@app.post("/api/v1/play-sessions", response_model=schemas.PlaySessionResponse)
+@app.post("/api/v1/play-sessions", response_model=schemas.PlaySessionResponse, dependencies=[Depends(require_anon_ingest)])
 async def create_play_session(
     play_session_data: schemas.PlaySessionCreate,
     db: Session = Depends(get_db)
@@ -144,7 +199,7 @@ async def create_play_session(
     return db_play_session
 
 
-@app.post("/api/v1/play-sessions/{play_session_id}/close")
+@app.post("/api/v1/play-sessions/{play_session_id}/close", dependencies=[Depends(require_anon_ingest)])
 async def close_play_session(play_session_id: int, db: Session = Depends(get_db)):
     """Close a play session."""
     play_session = db.query(models.PlaySession).filter(
@@ -159,7 +214,7 @@ async def close_play_session(play_session_id: int, db: Session = Depends(get_db)
     return {"status": "closed", "play_session_id": play_session_id}
 
 
-@app.post("/api/v1/events", response_model=schemas.EventResponse)
+@app.post("/api/v1/events", response_model=schemas.EventResponse, dependencies=[Depends(require_anon_ingest)])
 async def log_event(
     event: schemas.EventCreate,
     play_session_id: int,
@@ -190,7 +245,7 @@ async def log_event(
     return db_event
 
 
-@app.post("/api/v1/events/batch")
+@app.post("/api/v1/events/batch", dependencies=[Depends(require_anon_ingest)])
 async def log_events_batch(
     events: List[schemas.EventCreate],
     play_session_id: int,

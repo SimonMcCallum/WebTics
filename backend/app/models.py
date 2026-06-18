@@ -15,6 +15,9 @@ class MetricSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     closed_at = Column(DateTime, nullable=True)
 
+    # Owning registered game (nullable: legacy/anonymous sessions have no game).
+    game_id = Column(Integer, ForeignKey("games.id"), nullable=True, index=True)
+
     # Relationships
     play_sessions = relationship("PlaySession", back_populates="metric_session")
 

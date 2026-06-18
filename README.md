@@ -73,6 +73,35 @@ WebTics->LogEventAtPosition(
 );
 ```
 
+## For Students & Instructors (Teaching Service)
+
+WebTics doubles as a **student analytics platform** with a web portal, accounts, game
+registration, per-game quotas, and a **GA4-style** event API so skills transfer to Google
+Analytics / Apple App Analytics. The student-facing brand is **Ludogogy Logging**; the
+professional service brand is **WebTics** (local, green-energy logging for NZ developers).
+
+- 👩‍🎓 **Students:** [docs/Student_Quickstart.md](docs/Student_Quickstart.md) — claim your
+  account, register a game, drop in the Godot plugin or web snippet.
+- 🧑‍🏫 **Instructors:** [docs/Admin_Guide.md](docs/Admin_Guide.md) — create courses, import
+  rosters, hand out time-limited accounts, manage quotas.
+- 🔁 **GA4 mapping:** [docs/GA4_Compatibility.md](docs/GA4_Compatibility.md)
+- 📏 **Limits:** [docs/Quotas_and_Limits.md](docs/Quotas_and_Limits.md)
+- 🚀 **Deploy:** [docs/Deployment_Guide.md](docs/Deployment_Guide.md)
+- 💬 **Future Discord signup:** [docs/Discord_Signup_Future.md](docs/Discord_Signup_Future.md)
+
+The portal is served by the backend at **`/app`** (e.g. `https://analytics.<domain>/app`).
+Send events to **`POST /mp/collect?measurement_id=...&api_secret=...`**.
+
+Quick example (web):
+
+```html
+<script src="https://analytics.<domain>/sdk/webtics.js"></script>
+<script>
+  webtics('config', 'WT-AB12CD34', { api_secret: 'your-api-secret' });
+  webtics('event', 'level_up', { level: 5, character: 'mage' });
+</script>
+```
+
 ## Documentation
 
 - **[TESTING.md](TESTING.md)** - Complete testing and deployment guide

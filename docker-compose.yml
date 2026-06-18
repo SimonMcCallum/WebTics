@@ -29,6 +29,15 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
       ENVIRONMENT: ${ENVIRONMENT:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Student teaching service (accounts, games, quotas, GA4 ingest)
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_me}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8013}
+      # Dev default true; set false in production so quotas can't be bypassed.
+      ALLOW_ANON_INGEST: ${ALLOW_ANON_INGEST:-true}
+      WEBTICS_DEFAULT_RATE_PER_MIN: ${WEBTICS_DEFAULT_RATE_PER_MIN:-60}
+      WEBTICS_DEFAULT_BURST: ${WEBTICS_DEFAULT_BURST:-600}
+      WEBTICS_DEFAULT_MAX_BYTES: ${WEBTICS_DEFAULT_MAX_BYTES:-104857600}
+      WEBTICS_DEFAULT_USER_MAX_BYTES: ${WEBTICS_DEFAULT_USER_MAX_BYTES:-262144000}
     env_file:
       - .env
     ports:

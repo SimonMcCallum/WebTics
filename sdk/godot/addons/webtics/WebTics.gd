@@ -48,6 +48,37 @@ func configure(url: String) -> void:
 	print("[WebTics] Configured with base URL: ", base_url)
 
 
+## Game credentials for the authenticated GA4-style ingest (/mp/collect).
+var measurement_id: String = ""
+var api_secret: String = ""
+
+
+## Register the game's credentials (from your WebTics dashboard). Required when the
+## server runs with ALLOW_ANON_INGEST=false (the production/teaching default).
+func configure_game(p_measurement_id: String, p_api_secret: String) -> void:
+	measurement_id = p_measurement_id
+	api_secret = p_api_secret
+
+
+## Send a GA4-style named event through the authenticated endpoint. This is the
+## recommended path for the hosted service; the int-based log_event() API below remains
+## for self-hosted/raw use.
+func send_named_event(name: String, params: Dictionary = {}, client_id: String = "") -> void:
+	if measurement_id == "" or api_secret == "":
+		push_warning("[WebTics] configure_game() not called; cannot use /mp/collect.")
+		return
+	var cid := client_id if client_id != "" else str(metric_session_id)
+	var url = "%s/mp/collect?measurement_id=%s&api_secret=%s" % [
+		base_url, measurement_id.uri_encode(), api_secret.uri_encode()
+	]
+	var headers = ["Content-Type: application/json"]
+	var body = JSON.stringify({
+		"client_id": cid,
+		"events": [{ "name": name, "params": params }]
+	})
+	http_client.request(url, headers, HTTPClient.METHOD_POST, body)
+
+
 ## Open a new metric session
 func open_metric_session(unique_id: String, build_number: String = "") -> void:
 	if is_session_active:

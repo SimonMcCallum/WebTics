@@ -1,6 +1,27 @@
-# WebTics Godot SDK
+# WebTics Godot SDK (professional / raw)
 
 Lightweight telemetry and metrics system for Godot games.
+
+> **Which SDK should I use?**
+> - **Students / coursework →** use the **`ludogogy_logging`** addon — it's the friendly,
+>   2-line, GA4-style front end and handles auth, batching and rate-limit backoff for you.
+> - **This `webtics` SDK** is the professional / raw client: full control over the
+>   session → play-session → event model, plus an authenticated GA4 path.
+>
+> **WebTics** is a simple, self-hosted analytics service aimed at New Zealand game
+> developers who want their data kept **local** and running on **green energy**.
+
+## Authenticated (hosted) usage
+
+When pointing at a hosted/teaching WebTics server (`ALLOW_ANON_INGEST=false`), register
+your game's credentials and use the GA4-style named-event path:
+
+```gdscript
+func _ready():
+	WebTics.configure("https://analytics.example.nz")
+	WebTics.configure_game("WT-XXXXXXXX", "your-api-secret")
+	WebTics.send_named_event("level_up", { "level": 5 })
+```
 
 ## Installation
 
